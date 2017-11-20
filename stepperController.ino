@@ -1,7 +1,7 @@
 /**
  * A multi-axis stepper motor controller.
  * 
- * This controller do basic controls with 1-3 stepper motors.
+ * This controller does basic controls with 1-3 stepper motors.
  * 
  * Written by Mark Reynolds for Energy Everywhere in November of 2017.
  */
@@ -16,8 +16,8 @@
  * 
  * This controller communicates entirely over a basic serial
  * protocol. It assumes a baud rate of 9600, 8 data bits, no
- * parity bits, and on stop bit. These are the default settings
- * for arduinos.
+ * parity bits, and one stop bit. These are the default settings
+ * for Arduinos.
  */
 
 /***
@@ -29,8 +29,8 @@
  * 
  * The action and axis are always one character each.
  * 
- * The axis MUST always be 0-2 and be represented as an ASCII
- * character.
+ * The axis should always be 0-2 and be represented as an
+ * ASCII character.
  * 
  * There should not be any characters in between each part.
  * 

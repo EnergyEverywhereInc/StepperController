@@ -188,16 +188,20 @@ void moveBackward(int axis, unsigned long amt);
  */
 bool isHome(int axis);
 
-#define STEP_PIN_0 13  // Digital output pin connected to EasyDriver Step (STEP) pin for axis 1.
-#define DIR_PIN_0  4   // Digital output pin connected to EasyDriver Direction (DIR) pin for axis 1.
-#define STEP_PIN_1 0   // Digital output pin connected to EasyDriver Step (STEP) pin for axis 2.
-#define DIR_PIN_1  0   // Digital output pin connected to EasyDriver Direction (DIR) pin for axis 2.
-#define STEP_PIN_2 0   // Digital output pin connected to EasyDriver Step (STEP) pin for axis 3.
-#define DIR_PIN_2  0   // Digital output pin connected to EasyDriver Direction (DIR) pin for axis 3.
+#define STEP_PIN_0 13   // Digital output pin connected to EasyDriver Step (STEP) pin for axis 1.
+#define DIR_PIN_0  12    // Digital output pin connected to EasyDriver Direction (DIR) pin for axis 1.
+#define STEP_PIN_1 0    // Digital output pin connected to EasyDriver Step (STEP) pin for axis 2.
+#define DIR_PIN_1  0    // Digital output pin connected to EasyDriver Direction (DIR) pin for axis 2.
+#define STEP_PIN_2 0    // Digital output pin connected to EasyDriver Step (STEP) pin for axis 3.
+#define DIR_PIN_2  0    // Digital output pin connected to EasyDriver Direction (DIR) pin for axis 3.
 
-#define HOME_PIN_0 0   // Digital input pin connected to the home switch for axis 1.
-#define HOME_PIN_1 0   // Digital input pin connected to the home switch for axis 2.
-#define HOME_PIN_2 0   // Digital input pin connected to the home switch for axis 3.
+#define HOME_PIN_0 0    // Digital input pin connected to the home switch for axis 1.
+#define HOME_PIN_1 0    // Digital input pin connected to the home switch for axis 2.
+#define HOME_PIN_2 0    // Digital input pin connected to the home switch for axis 3.
+
+#define AXIS_LENGTH_0 0 // The farthest the controller can step in a given direction, in steps.
+#define AXIS_LENGTH_1 0 // The farthest the controller can step in a given direction, in steps.
+#define AXIS_LENGTH_2 0 // The farthest the controller can step in a given direction, in steps.
 
 #define AXISES     1  // Number of axises this controller is connected to.
 
@@ -205,8 +209,26 @@ bool isHome(int axis);
   #error AXISES must be between 1-3 (inclusive).
 #endif
 
-#define STEP_DELAY 50 // How long to wait in between steps
+#define STEP_DELAY 1 // How long to wait in between steps
 #define DEBUG false  // Whether or not to print debug statements over the serial connection. (This should always be false for production use.)
+
+// @TODO Do we need seperate calibrations?
+bool calibrated_0 = false;
+bool calibrated_1 = false;
+bool calibrated_2 = false;
+
+#define POS_ADDR_0 16       // The address the position of axis one is stored in EEPROM.
+#define POS_CRC_ADDR_0 20   // The address of the CRC of the position of axis one is stored in EEPROM.
+#define POS_ADDR_1 24       // The address the position of axis two is stored in EEPROM.
+#define POS_CRC_ADDR_1 28   // The address of the CRC of the position of axis two is stored in EEPROM.
+#define POS_ADDR_2 32       // The address the position of axis three is stored in EEPROM.
+#define POS_CRC_ADDR_2 36   // The address of the CRC of the position of axis three is stored in EEPROM.
+
+unsigned long position_0 = 0;
+unsigned long position_1 = 0;
+unsigned long position_2 = 0;
+
+#include <EEPROM.h>
 
 void setup() {
   Serial.begin(9600);
@@ -223,6 +245,28 @@ void setup() {
     pinMode(DIR_PIN_2, OUTPUT);
     pinMode(HOME_PIN_2, INPUT);
   }
+
+  //EEPROM.get(POS_ADDR_0,position_0);
+  //EEPROM.get(POS_ADDR_1,position_1);
+  //EEPROM.get(POS_ADDR_2,position_2);
+
+  //unsigned long crc_0 = 0;
+  //unsigned long crc_1 = 0;
+  //unsigned long crc_2 = 0;
+
+  //EEPROM.get(POS_CRC_ADDR_0,crc_0);
+  //EEPROM.get(POS_CRC_ADDR_1,crc_1);
+  //EEPROM.get(POS_CRC_ADDR_2,crc_2);
+
+  /*if (eeprom_crc(position_0) == crc_0) {
+    calibrated_0 = true;
+  }
+  if (eeprom_crc(position_1) == crc_1) {
+    calibrated_1 = true;
+  }
+  if (eeprom_crc(position_2) == crc_2) {
+    calibrated_2 = true;
+  }*/
 }
 
 void loop() {
@@ -234,11 +278,14 @@ void loop() {
       Serial.write('0'+AXISES);
     }
     else {
+      while (Serial.available() == 0) {}
       int axis = (int)(Serial.read()-'0');
       if ((axis >= AXISES) || (axis < 0)) {
         Serial.write('2');
         if (DEBUG) {
-          Serial.println(" Invalid axis.");
+          Serial.println(" Invalid axis(");
+          Serial.println(axis+'0');
+          Serial.println(").");
         }
       }
       if (cmd == '+') { // Move forward
@@ -319,6 +366,7 @@ void moveBackward(int axis, unsigned long amt) {
     digitalWrite(DIR_PIN_0,HIGH);
     digitalWrite(STEP_PIN_0,LOW);
     //delay(STEP_DELAY);
+    //position_0 -= amt;
     while (amt > 0) {
       digitalWrite(STEP_PIN_0,HIGH);
       delay(STEP_DELAY);
@@ -331,6 +379,7 @@ void moveBackward(int axis, unsigned long amt) {
     digitalWrite(DIR_PIN_1,HIGH);
     digitalWrite(STEP_PIN_1,LOW);
     //delay(STEP_DELAY);
+    //position_1 -= amt;
     while (amt > 0) {
       digitalWrite(STEP_PIN_1,HIGH);
       delay(STEP_DELAY);
@@ -343,6 +392,7 @@ void moveBackward(int axis, unsigned long amt) {
     digitalWrite(DIR_PIN_2,HIGH);
     digitalWrite(STEP_PIN_2,LOW);
     //delay(STEP_DELAY);
+    //position_2 -= amt;
     while (amt > 0) {
       digitalWrite(STEP_PIN_2,HIGH);
       delay(STEP_DELAY);
@@ -364,4 +414,3 @@ bool isHome(int axis) {
     return digitalRead(HOME_PIN_2);
   }
 }
-
